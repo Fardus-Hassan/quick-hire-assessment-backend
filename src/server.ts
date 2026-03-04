@@ -20,7 +20,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("API Running...");
 });
 
-app.use("/api/admin", jobRoutes);
+app.use("/api", jobRoutes);
 
 const PORT = process.env.PORT || 5000;
 
