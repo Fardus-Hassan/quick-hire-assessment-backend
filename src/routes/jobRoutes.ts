@@ -31,7 +31,7 @@ router.get("/jobs", async (req: Request, res: Response) => {
     }
 
     if (location && typeof location === "string") {
-      filters.location = location;
+      filters.location = { $regex: location, $options: "i" };
     }
 
     const pageNumber = Number(page) > 0 ? Number(page) : 1;
@@ -105,50 +105,25 @@ router.post("/jobs", async (req: Request<{}, {}, JobInput>, res: Response) => {
   }
 });
 
-router.post(
-  "/admin/jobs",
-  async (req: Request<{}, {}, JobInput>, res: Response) => {
-    try {
-      const {
-        title,
-        company,
-        location,
-        category,
-        short_description,
-        main_description,
-        created_at,
-      } = req.body;
 
-      if (
-        !title ||
-        !company ||
-        !location ||
-        !category ||
-        !short_description ||
-        !main_description
-      ) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
+router.get("/jobs/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
 
-      const job = new Job({
-        title,
-        company,
-        location,
-        category,
-        short_description,
-        main_description,
-        created_at: created_at || new Date().toISOString(),
-      });
+    const job = await Job.findById(id);
 
-      const savedJob = await job.save();
-
-      return res.status(201).json(savedJob);
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: "Server error" });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
     }
+
+    return res.json(job);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
-);
+});
+
+
 
 export default router;
 
