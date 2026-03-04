@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { Job, IJob } from "../models/Job";
+import { Application } from "../models/Application";
 
 interface JobInput {
   title: string;
@@ -139,6 +140,50 @@ router.delete("/jobs/:id", async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
+interface ApplicationInput {
+  job_id: string;
+  name: string;
+  email: string;
+  resume_link: string;
+  cover_note: string;
+  created_at: string;
+}
+
+router.post(
+  "/applications",
+  async (req: Request<{}, {}, ApplicationInput>, res: Response) => {
+    try {
+      const { job_id, name, email, resume_link, cover_note, created_at } =
+        req.body;
+
+      if (!job_id || !name || !email || !resume_link || !cover_note) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      const jobExists = await Job.findById(job_id);
+      if (!jobExists) {
+        return res.status(400).json({ message: "Invalid job_id" });
+      }
+
+      const application = new Application({
+        job_id,
+        name,
+        email,
+        resume_link,
+        cover_note,
+        created_at: created_at || new Date().toISOString(),
+      });
+
+      const savedApplication = await application.save();
+
+      return res.status(201).json(savedApplication);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 export default router;
 
